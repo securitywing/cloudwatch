@@ -1,0 +1,32 @@
+---
+- hosts: localhost
+  tasks:
+   - name: cloud watch directroy creation
+     file:
+       dest: /monitor
+       owner: root
+       group: root
+       state: directory
+   - name: install packages
+     package: name="{{ item }}" state=latest
+     with_items:
+        - zip
+        - unzip
+        - perl-Switch
+        - perl-DateTime
+        - perl-Sys-Syslog
+        - perl-LWP-Protocol-https 
+        - perl-Digest-SHA
+
+   - name: unzip clodudwatch script
+     unarchive:
+       src: http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.1.zip
+       dest: /monitor
+       remote_src: yes
+
+   - cron: 
+        name: " Cronjob setup for CloudWatch"
+        user: "root"
+        minute: "*/5"
+        job: "/monitor/aws-scripts-mon/mon-put-instance-data.pl --mem-util --disk-space-util --disk-path=/ --from-cron"
+        backup: yes
